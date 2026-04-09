@@ -2,13 +2,57 @@
 
 这是一个可直接分发的 DDR CLI 发布包。
 
-它的目标是让使用者在拿到这个目录后，不需要理解生成器、模板和 OpenAPI 细节，只需要：
+它分成两层：
+
+- 源码和模板：保留在当前目录下，面向开发者
+- 最终交付物：统一生成到 `output/`，面向最终用户
+
+也就是说，普通使用者在拿到这个目录后，只需要：
 
 1. 运行 `./build.sh`
-2. 填写 `config/ddr.env`
-3. 开始使用 CLI
+2. 进入 `output/`
+3. 填写 `output/config/ddr.env`
+4. 开始使用 CLI 或接入 AI
 
-如果需要，还可以继续把 `Skills/SKILL.md` 接入 AI，实现自然语言查询。
+## 源码区 vs output 交付区
+
+可以把这个目录理解成两部分：
+
+### 1. 源码区
+
+源码区就是当前目录里这些内容：
+
+- `CLI/`
+- `scripts/`
+- `config/`
+- `Skills/`
+- `Templates/`
+- `build.sh`
+
+它们的用途是：
+
+- 让开发者继续维护 CLI 源码
+- 让发布脚本有地方读取模板和脚本源文件
+- 支撑 `./build.sh` 重新生成最终交付物
+
+如果你是在开发、改代码、改模板，就操作源码区。
+
+### 2. output 交付区
+
+`output/` 是运行 `./build.sh` 后生成的最终用户目录。
+
+它的用途是：
+
+- 给普通用户直接使用 CLI
+- 给 AI 平台直接接入 `SKILL.md`
+- 作为最终交付产物打包或分发
+
+如果你只是使用 CLI 或接入 AI，请优先进入 `output/`，不要直接使用源码区里的脚本和模板。
+
+一句话理解：
+
+- 改代码，看源码区
+- 真正使用，看 `output/`
 
 ## 目录说明
 
@@ -16,18 +60,14 @@
   - Go CLI 源码目录
 - `build.sh`
   - 一键构建和初始化脚本
-- `bin/`
-  - 构建后的可执行文件输出目录
 - `config/ddr.env.example`
-  - 配置模板
-- `config/ddr.env`
-  - 运行时配置文件，首次构建后会自动生成
+  - 配置模板源码
 - `scripts/ddr-run.sh`
-  - CLI 运行入口脚本
+  - 运行脚本源码
 - `Skills/SKILL.md.example`
-  - skill 模板文件
-- `Skills/SKILL.md`
-  - 构建后自动生成的 skill 文件，路径会替换成当前机器的绝对路径
+  - skill 模板源码
+- `output/`
+  - `./build.sh` 生成的最终交付目录
 
 ## 前提条件
 
@@ -53,18 +93,26 @@ go version
 
 1. 检查 Go 环境
 2. 在 `CLI/` 下执行 `go mod tidy`
-3. 构建 `bin/ddr`
-4. 初始化 `config/ddr.env`
-5. 给 `bin/ddr` 和 `scripts/ddr-run.sh` 增加执行权限
-6. 生成 `Skills/SKILL.md`
-7. 用 `--help` 做本地非联网验证
+3. 重建 `output/` 交付目录
+4. 构建 `output/bin/ddr`
+5. 复制 `output/scripts/ddr-run.sh`
+6. 初始化 `output/config/ddr.env`
+7. 生成 `output/Skills/SKILL.md`
+8. 生成 `output/README.md`
+9. 用 `--help` 做本地非联网验证
 
 说明：
 
 - `build.sh` 不会主动访问真实 DDR 服务
-- 它只负责把本地运行环境准备好
+- `output/config/ddr.env` 如果已存在，会被保留，不会覆盖
 
 ## 第二步：填写配置
+
+进入：
+
+```bash
+cd output
+```
 
 编辑：
 
@@ -124,28 +172,28 @@ DDR_INSECURE=false
 
 ## 只使用 CLI 的用户
 
-如果你只想用命令行，不需要 AI，那么只需要这几样：
+如果你只想用命令行，不需要 AI，那么只需要 `output/` 里的内容：
 
-- `build.sh`
-- `config/ddr.env`
-- `bin/ddr`
-- `scripts/ddr-run.sh`
+- `output/bin/ddr`
+- `output/config/ddr.env`
+- `output/scripts/ddr-run.sh`
 
 常规流程就是：
 
 ```bash
 ./build.sh
+cd ./output
 vim ./config/ddr.env
 ./scripts/ddr-run.sh staff list -f json
 ```
 
 ## 需要 AI 自然语言接入的用户
 
-如果你希望让 AI 直接通过自然语言查询 DDR，需要继续使用 `Skills/SKILL.md`。
+如果你希望让 AI 直接通过自然语言查询 DDR，需要继续使用 `output/Skills/SKILL.md`。
 
 ### `Skills/SKILL.md` 是怎么来的
 
-运行 `./build.sh` 后，会自动把：
+运行 `./build.sh` 后，会自动把源码模板：
 
 ```bash
 Skills/SKILL.md.example
@@ -154,7 +202,7 @@ Skills/SKILL.md.example
 复制并转换成：
 
 ```bash
-Skills/SKILL.md
+output/Skills/SKILL.md
 ```
 
 区别是：
@@ -167,7 +215,7 @@ Skills/SKILL.md
 
 常见有两种方式：
 
-1. 直接把 `Skills/SKILL.md` 复制到 AI 的 skill 目录
+1. 直接把 `output/Skills/SKILL.md` 复制到 AI 的 skill 目录
 2. 如果 AI 支持读取项目内 skill，也可以直接引用这个文件
 
 例如某些环境会使用：
@@ -180,12 +228,12 @@ Skills/SKILL.md
 
 ```bash
 mkdir -p ~/.agents/skills/ddr-manager
-cp ./Skills/SKILL.md ~/.agents/skills/ddr-manager/SKILL.md
+cp ./output/Skills/SKILL.md ~/.agents/skills/ddr-manager/SKILL.md
 ```
 
 ### AI 实际会调用什么
 
-这个 skill 的核心目标是让 AI 调用：
+这个 skill 的核心目标是让 AI 调用 `output/` 下的运行脚本：
 
 ```bash
 ./scripts/ddr-run.sh <ddr子命令> [参数...]

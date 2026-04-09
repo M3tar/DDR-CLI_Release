@@ -1,0 +1,64 @@
+# DDR CLI Output
+
+这个目录是 `./build.sh` 生成后的最终交付目录。
+
+如果你只是使用 DDR CLI 或接入 AI，请优先在这个目录下操作，不需要再进入源码目录。
+
+## 目录说明
+
+- `bin/ddr`
+  - 已构建好的 CLI 可执行文件
+- `scripts/ddr-run.sh`
+  - 运行入口脚本
+- `config/ddr.env.example`
+  - 配置模板
+- `config/ddr.env`
+  - 运行配置文件；如果已经存在，后续 build 不会覆盖
+- `Skills/SKILL.md`
+  - 面向当前机器生成的 skill 文件，内部已替换为绝对路径
+
+## 第一步：填写配置
+
+编辑：
+
+```bash
+__DDR_OUTPUT_ROOT__/config/ddr.env
+```
+
+需要填写：
+
+- `DDR_URL`
+- `DDR_COMPANY_ID`
+- `DDR_TOKEN`
+- `DDR_INSECURE`
+
+## 第二步：查看帮助
+
+```bash
+./bin/ddr --help
+./scripts/ddr-run.sh --help
+./scripts/ddr-run.sh staff --help
+./scripts/ddr-run.sh device --help
+```
+
+## 第三步：执行查询
+
+```bash
+./scripts/ddr-run.sh staff list --search 待离职员工 -f json
+./scripts/ddr-run.sh device detail --device-id <设备ID>
+```
+
+## AI 接入
+
+如果你希望让 AI 直接通过自然语言查询 DDR，可将下面文件复制到 AI 的 skill 目录：
+
+```bash
+__DDR_OUTPUT_ROOT__/Skills/SKILL.md
+```
+
+例如：
+
+```bash
+mkdir -p ~/.agents/skills/ddr-manager
+cp "__DDR_OUTPUT_ROOT__/Skills/SKILL.md" ~/.agents/skills/ddr-manager/SKILL.md
+```

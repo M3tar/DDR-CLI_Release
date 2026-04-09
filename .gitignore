@@ -4,11 +4,5 @@
 .gocache/
 .gomodcache/
 
-# Local build output
-bin/ddr
-
-# Local runtime config
-config/ddr.env
-
-# Machine-specific generated skill
-Skills/SKILL.md
+# Generated release output
+output/
