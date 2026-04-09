@@ -1,0 +1,14 @@
+.DS_Store
+
+# Local Go caches created by build.sh
+.gocache/
+.gomodcache/
+
+# Local build output
+bin/ddr
+
+# Local runtime config
+config/ddr.env
+
+# Machine-specific generated skill
+Skills/SKILL.md

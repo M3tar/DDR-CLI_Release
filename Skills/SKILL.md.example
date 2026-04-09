@@ -1,0 +1,157 @@
+---
+name: ddr-manager
+description: Use when the user wants to query or operate the DDR management platform through the local DDR CLI, especially when they want to ask in natural language and have the agent choose and run the correct DDR command
+---
+
+# DDR Manager
+
+## 背景
+
+DDR 项目已经生成了可用的本地 CLI，交付目录位于：
+
+- `__DDR_RELEASE_ROOT__`
+
+其中：
+
+- 可执行文件：`__DDR_RELEASE_ROOT__/bin/ddr`
+- 运行脚本：`__DDR_RELEASE_ROOT__/scripts/ddr-run.sh`
+- 默认配置：`__DDR_RELEASE_ROOT__/config/ddr.env`
+
+这个 skill 的目标不是自己实现 API 调用，而是指导 AI 直接使用现成 CLI。
+
+## 何时使用
+
+当用户提出以下类型请求时使用：
+
+- “帮我查这个设备详情”
+- “查员工列表 / 标签列表 / 设备列表”
+- “帮我看看这个审批实例”
+- “用自然语言查 DDR 数据”
+
+如果用户只是修改 DDR CLI 代码、模板、生成器，不使用本 skill，直接做代码工作。
+
+## 使用前检查
+
+先确认以下文件存在：
+
+- `__DDR_RELEASE_ROOT__/bin/ddr`
+- `__DDR_RELEASE_ROOT__/scripts/ddr-run.sh`
+- `__DDR_RELEASE_ROOT__/config/ddr.env`
+
+如果缺少配置文件，但用户已经给了 URL / company_id / token，可让用户补到 `ddr.env`，或让用户指定另一个 env 文件路径。
+
+## 调用方式
+
+优先使用：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh <ddr子命令> [参数...]
+```
+
+如果要指定配置文件：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh -c <env文件路径> <ddr子命令> [参数...]
+```
+
+不要自己手写 HTTP 请求，除非 CLI 无法覆盖该接口。
+
+## 工作流程
+
+1. 先判断用户意图属于哪个 DDR 命令分组
+2. 如不确定参数名，先查看帮助
+3. 如果命令需要真实访问 DDR 服务，先判断当前会话是否已经具备本次执行所需权限
+4. 如果当前会话还没有这次执行所需权限，再明确告诉用户“本次需要提权执行以脱离当前沙箱”，等待用户同意
+5. 如果当前会话已经具备可用权限，则不要重复提醒用户提权，直接执行
+6. 执行后读取 JSON 输出
+7. 给用户返回简明结论，并保留关键字段
+
+## 提权执行硬规则
+
+如果本次查询需要真实访问 DDR 服务，则必须遵守下面的规则：
+
+1. 先展示准备执行的完整命令
+2. 如果当前会话尚未具备所需权限，明确说明“本次需要提权执行”
+3. 仅在当前会话尚未具备所需权限时，等待用户批准这一次命令
+4. 如果当前会话已经具备可用权限，则直接执行，不要重复要求用户确认同一类已放行命令
+5. 如果需要新增权限，批准后必须使用真实提权方式执行
+6. 如果当前会话或当前平台不支持提权执行，则必须停止，并明确告诉用户：
+   - 当前环境不支持提权执行
+   - 不能继续在现有沙箱里替用户盲跑一次
+   - 请改为用户本机执行，或换到支持提权的会话
+
+禁止行为：
+
+- 用户批准后，仍然在当前沙箱权限下直接尝试联网命令
+- 明知当前环境不支持提权，还继续把失败归因成“也许可以试一下”
+- 在没有真实提权的前提下，把沙箱里的联网失败当作有效查询结果
+- 当前会话已经具备同一命令所需权限时，仍然反复要求用户再次确认
+
+## 帮助查看
+
+根帮助：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh --help
+```
+
+DDR CLI 帮助：
+
+```bash
+__DDR_RELEASE_ROOT__/bin/ddr --help
+```
+
+分组帮助示例：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh device --help
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh staff --help
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh approval --help
+```
+
+## 常用示例
+
+查询设备详情：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh device detail --device-id <设备ID>
+```
+
+查询设备列表：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh device list
+```
+
+查询员工列表：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh staff list --search <关键词>
+```
+
+审批动作：
+
+```bash
+__DDR_RELEASE_ROOT__/scripts/ddr-run.sh approval instance_action --instance-id <ID> --approval-status approved --opinions <意见>
+```
+
+## 输出要求
+
+- 优先总结核心结论，不要把大段 JSON 原样全部复述给用户
+- 如果返回里有 `code` 且不为 0，要明确告诉用户是业务失败，不是命令解析失败
+- 如果是网络 / TLS / 配置问题，要明确指出是哪一层出错
+- 如果问题是“当前沙箱无法直连 DDR 服务”，要明确告诉用户这不是 CLI 问题，而是执行环境限制，并请求提权执行
+- 提权执行默认按“单次命令确认”处理，不要假设用户已经同意长期前缀授权
+- 如果当前平台根本不支持提权执行，要直接说明“本次无法代执行”，不要改成在沙箱里继续盲试
+- 如果当前会话已经具备本次真实查询所需权限，则直接执行，不要再做多余的提权提醒
+
+## 注意事项
+
+- 某些环境需要 `DDR_INSECURE=true`
+- `ddr-run.sh` 读取的是 env 文件，不是 yaml
+- 已验证 DDR 鉴权头使用 `Authorization: Token <token>`
+- 当用户要“直接进入 AI 提问”时，正确做法是让 AI 学会调用这个脚本，而不是把 CLI 逻辑重新实现一遍
+- 自然语言查询如果要真正打到 DDR 服务，通常需要当前 AI 会话具备真实命令执行权限；若没有，应先请求提权，再执行查询
+- 除非用户明确要求并批准长期规则，否则每次真实查询都应单独请求一次提权确认
+- skill 只能约束 AI 的行为，不能替平台增加本来不存在的提权能力；如果平台不支持提权，skill 也无法强制它生效
+- “需要提权”与“已经具备权限”是两回事；一旦当前会话已经具备本次命令所需权限，就应直接运行，不要机械重复提示
