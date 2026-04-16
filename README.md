@@ -133,8 +133,13 @@ config/ddr.env
 DDR_URL=https://127.0.0.1:8443/openapi
 DDR_COMPANY_ID=your-company-id
 DDR_TOKEN=your-token
-DDR_INSECURE=false
+DDR_INSECURE=true
 ```
+
+说明：
+
+- 对很多内网、自签名或证书链不规范的 DDR 环境，建议默认保持 `DDR_INSECURE=true`
+- 如果你的目标环境证书链完全正常，再改成 `false`
 
 ## 第三步：确认 CLI 可用
 

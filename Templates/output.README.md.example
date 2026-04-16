@@ -32,6 +32,12 @@ __DDR_OUTPUT_ROOT__/config/ddr.env
 - `DDR_TOKEN`
 - `DDR_INSECURE`
 
+建议：
+
+- 默认优先使用 `DDR_INSECURE=true`
+- 如果你的 DDR 服务证书链正常，再改成 `false`
+- 如果出现 `tls: failed to verify certificate` 或类似 x509 报错，优先先检查这里
+
 ## 第二步：查看帮助
 
 ```bash

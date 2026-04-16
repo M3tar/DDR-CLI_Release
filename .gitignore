@@ -6,3 +6,7 @@
 
 # Generated release output
 output/
+
+# Python caches
+__pycache__/
+*.pyc
