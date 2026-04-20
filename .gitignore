@@ -3,9 +3,12 @@
 # Local Go caches created by build.sh
 .gocache/
 .gomodcache/
+CLI/.cache/
+CLI/CLI/
 
 # Generated release output
 output/
+internal/generator/generated/
 
 # Python caches
 __pycache__/
