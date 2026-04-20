@@ -172,9 +172,23 @@ func (c *Client) headersFor(route string) map[string]string {
 		headers["X-CS-Header-Debug"] = "true"
 	}
 	if route != "/v1/token" && c.token != "" {
-		headers["Authorization"] = "Token " + c.token
+		headers["Authorization"] = authorizationValue(c.token, "Token")
 	}
 	return headers
+}
+
+func authorizationValue(value string, defaultScheme string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+
+	lower := strings.ToLower(trimmed)
+	if strings.HasPrefix(lower, "token ") || strings.HasPrefix(lower, "serval ") {
+		return trimmed
+	}
+
+	return defaultScheme + " " + trimmed
 }
 
 func applyPathParams(route string, pathParams map[string]interface{}) (string, error) {

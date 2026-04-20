@@ -5,10 +5,12 @@
 .gomodcache/
 CLI/.cache/
 CLI/CLI/
+CLI/products/ddr/client/client_test.go
 
 # Generated release output
 output/
-internal/generator/generated/
+internal/
+InternalDocs/
 
 # Python caches
 __pycache__/

@@ -138,6 +138,15 @@ DDR_INSECURE=true
 
 说明：
 
+- `DDR_TOKEN` 支持 3 种写法：
+  - `DDR_TOKEN=abc123`
+  - `DDR_TOKEN='Token abc123'`
+  - `DDR_TOKEN='SERVAL abc123'`
+- openapi 请求会按以下规则发送 `Authorization`：
+  - 裸值 `abc123` -> `Authorization: Token abc123`
+  - 显式 `Token abc123` -> 原样发送
+  - 显式 `SERVAL abc123` -> 原样发送
+- 如果在 `ddr.env` 里直接填写 `Token ...` 或 `SERVAL ...`，因为会被 shell `source`，带空格的值必须加引号
 - 对很多内网、自签名或证书链不规范的 DDR 环境，建议默认保持 `DDR_INSECURE=true`
 - 如果你的目标环境证书链完全正常，再改成 `false`
 

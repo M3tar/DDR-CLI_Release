@@ -149,7 +149,10 @@ __DDR_RELEASE_ROOT__/scripts/ddr-run.sh approval instance_action --instance-id <
 
 - 某些环境需要 `DDR_INSECURE=true`
 - `ddr-run.sh` 读取的是 env 文件，不是 yaml
-- 已验证 DDR 鉴权头使用 `Authorization: Token <token>`
+- 已验证 DDR OpenAPI 鉴权头支持以下 `DDR_TOKEN` 形式：
+  - 裸值 `abc123` -> `Authorization: Token abc123`
+  - 显式 `Token abc123` -> 原样发送
+  - 显式 `SERVAL abc123` -> 原样发送
 - 当用户要“直接进入 AI 提问”时，正确做法是让 AI 学会调用这个脚本，而不是把 CLI 逻辑重新实现一遍
 - 自然语言查询如果要真正打到 DDR 服务，通常需要当前 AI 会话具备真实命令执行权限；若没有，应先请求提权，再执行查询
 - 除非用户明确要求并批准长期规则，否则每次真实查询都应单独请求一次提权确认
