@@ -14,6 +14,10 @@
 3. 填写 `output/config/ddr.env`
 4. 开始使用 CLI 或接入 AI
 
+## 演示视频
+
+[点击查看 DDR CLI 演示视频](assets/demo/cli-demo.mp4)
+
 ## 源码区 vs output 交付区
 
 可以把这个目录理解成两部分：
